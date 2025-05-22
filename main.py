@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi import Header
 import requests
 from requests.exceptions import RequestException
 from dotenv import load_dotenv
@@ -11,14 +12,14 @@ load_dotenv()
 app = FastAPI()
 
 @app.get("/proxy/session")
-def get_session_id():
+def get_session_id(x_proxy_token: str = Header(None)):
     auth_token = os.getenv("AUTH_TOKEN")
     proxy_access_token = os.getenv("PROXY_ACCESS_TOKEN")
     if not auth_token:
         raise HTTPException(status_code=500, detail="AUTH_TOKEN not configured")
     if not proxy_access_token:
         raise HTTPException(status_code=500, detail="PROXY_ACCESS_TOKEN not configured")
-    if proxy_access_token != proxy_access_token:
+    if x_proxy_token != proxy_access_token:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     try:
