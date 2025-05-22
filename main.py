@@ -13,8 +13,13 @@ app = FastAPI()
 @app.get("/proxy/session")
 def get_session_id():
     auth_token = os.getenv("AUTH_TOKEN")
+    proxy_access_token = os.getenv("PROXY_ACCESS_TOKEN")
     if not auth_token:
         raise HTTPException(status_code=500, detail="AUTH_TOKEN not configured")
+    if not proxy_access_token:
+        raise HTTPException(status_code=500, detail="PROXY_ACCESS_TOKEN not configured")
+    if proxy_access_token != proxy_access_token:
+        raise HTTPException(status_code=403, detail="Unauthorized")
 
     try:
         response = requests.get(
