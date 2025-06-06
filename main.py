@@ -12,7 +12,7 @@ load_dotenv()
 app = FastAPI()
 
 @app.get("/proxy/session")
-def get_session_id(x_proxy_token: str = Header(None)):
+def get_session_id(x_proxy_token: str = Header(None), sessionID: str = None):
     auth_token = os.getenv("AUTH_TOKEN")
     proxy_access_token = os.getenv("PROXY_ACCESS_TOKEN")
     if not auth_token:
@@ -21,6 +21,10 @@ def get_session_id(x_proxy_token: str = Header(None)):
         raise HTTPException(status_code=500, detail="PROXY_ACCESS_TOKEN not configured")
     if x_proxy_token != proxy_access_token:
         raise HTTPException(status_code=403, detail="Unauthorized")
+
+    cookies = {}
+    if sessionID:
+        cookies["OCSESSID"] = sessionID
 
     try:
         response = requests.get(
@@ -32,10 +36,12 @@ def get_session_id(x_proxy_token: str = Header(None)):
                 "Accept": "*/*",
                 "Accept-Encoding": "gzip, deflate, br",
                 "Connection": "keep-alive"
-            }
+            },
+            cookies=cookies
         )
         response.raise_for_status()  # Raise an exception for bad status codes
         session_id = response.text.strip()
         return JSONResponse(content={"sessionID": session_id})
     except RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch session ID: {str(e)}")
+
